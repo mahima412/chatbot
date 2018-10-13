@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Chat Bot || Demo Cheat Box</title>
+	<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+
+  	<script src="/static/js/jquery.js"></script>
+  	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+  	<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<div class="content-wrapper">
+
+  <section class="content-header content-header-margin">
+      <h1 style="margin-left: 50px">
+         Chatbot
+      </h1>
+  </section>
+  <section class="content">
+    <div class="col-md-8" style="margin-left: 35px">
+        The bot is currently in BETA.
+      <div class="box box-danger direct-chat direct-chat-danger" style="left:0%; margin-top:3%; height:380px; border: 1px solid #0f5795">
+        <div class="box-header with-border">
+          <h3 class="box-title">Chatbot</h3>
+          <div class="box-tools pull-right">
+          </div>
+        </div>
+        <div class="box-body">
+          <!-- Conversations are loaded here -->
+          <div class="direct-chat-messages" style="border-top: 1px solid #0f5795;
+      margin-right:-1px; border-bottom: 1px solid #0f5795;" >
+            <!-- Message. Default to the left -->
+            <div class="direct-chat-msg">
+              <div class="direct-chat-info clearfix">
+                <span class="direct-chat-name pull-left">Chat-bot</span>
+              </div>
+              <!-- /.direct-chat-info -->
+              <img class="direct-chat-img" src="../static/img/user1.png" alt="message user image">
+              <!-- /.direct-chat-img -->
+
+              <div class="direct-chat-text chat-gray">
+                This is demo chat. Please type any text to get intract.
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- /.box-body -->
+        <div class="box-footer">
+          <form id="user_queries" >{% csrf_token %}
+              <input type="text" name="message" id="msg_content"  placeholder="Type Message ..." class="form-control" style = "width:100%">
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- /.box-footer-->
+</div>
+
+</body>
+<script type="text/javascript">
+$(document).ready(function(){
+    $("form#user_queries").submit(function(event){
+        event.preventDefault();       
+        var query_text = $('#msg_content').val();
+        var formData = new FormData();
+        formData.append('query_text', query_text);
+        formData.append('csrfmiddlewaretoken', '{{csrf_token}}');
+
+        var user_question_div= '<div class="direct-chat-msg right"><div class="direct-chat-info clearfix"><span class="direct-chat-name pull-right"></span><span class="direct-chat-timestamp pull-left"></span></div><img class="direct-chat-img" src="../static/img/user.png" alt="message user image"><div class="direct-chat-text chat-blue">'+query_text+'</div></div>'
+
+        var temp_response = '<div class="direct-chat-msg temp_resp"><div class="direct-chat-info clearfix"><span class="direct-chat-name pull-left">Ava</span><span class="direct-chat-timestamp pull-right"></span></div><img class="direct-chat-img" src="../static/img/user1.png" alt="message user image"><div class="direct-chat-text"><img src="../static/img/loader_img.gif" height="16px" alt="...."></div></div>'
+
+        $('.direct-chat-messages').append(user_question_div)
+        $('.direct-chat-messages').append(temp_response)
+        $('.direct-chat-messages').scrollTop($('.direct-chat-messages')[0].scrollHeight);
+
+        $('#msg_content').val('')
+
+        setTimeout(function(){
+          $.ajax({
+                 url: "/",
+                 type: 'POST',
+                 data: formData,
+                 async: false,
+                 contentType: false,
+                 processData: false,
+                 error: function(data){
+                     alert("There was a problem");
+                 },
+                 success: function (returndata) {
+                    // $('.direct-chat-messages').append(temp_response)
+                    $('.temp_resp').remove()
+                    $( ".direct-chat-messages" ).remove( ".temp_response" );
+
+                    if(returndata.status == 1)
+
+                    // for(i=0; i < returndata.query_response.length; i++)
+                    {
+                    var bot_response = '<div class="direct-chat-msg"><div class="direct-chat-info clearfix"><span class="direct-chat-name pull-left"> Chat-bot </span><span class="direct-chat-timestamp pull-right"></span></div><img class="direct-chat-img" src="../static/img/user1.png" alt="message user image"><div class="direct-chat-text chat-gray">'+returndata.response_text+'</div></div>'
+                    $('.direct-chat-messages').append(bot_response)
+
+                    $(".direct-chat-messages").animate({ scrollTop: $('.direct-chat-messages').prop("scrollHeight")}, 1000);
+                    }
+
+                    else
+                    {
+                    	var bot_response = '<div class="direct-chat-msg"><div class="direct-chat-info clearfix"><span class="direct-chat-name pull-left"> Chat-bot </span><span class="direct-chat-timestamp pull-right"></span></div><img class="direct-chat-img" src="../static/img/user1.png" alt="message user image"><div class="direct-chat-text chat-gray">'+returndata.message+'</div></div>'
+	                    $('.direct-chat-messages').append(bot_response)
+
+	                    $(".direct-chat-messages").animate({ scrollTop: $('.direct-chat-messages').prop("scrollHeight")}, 1000);
+
+                    }
+
+                 }
+              });
+                        
+          }, 1000);
+      
+
+    })
+  })
+</script>
+</html>
